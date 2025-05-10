@@ -18,9 +18,9 @@ type Config struct {
 func GetConfig() (Config, error) {
 	var config Config
 
-	flag.StringVar(&config.RunAddress, "a", "localhost:8081", "server address")
+	flag.StringVar(&config.RunAddress, "a", "localhost:8080", "server address")
 	flag.StringVar(&config.DatabaseURL, "d", "", "database dsn")
-	flag.StringVar(&config.AccrualSystemAddress, "r", "http://localhost:8080", "accrual system address")
+	flag.StringVar(&config.AccrualSystemAddress, "r", "http://localhost:8081", "accrual system address")
 	flag.StringVar(&config.LogLevel, "l", "debug", "log level")
 	flag.StringVar(&config.SecretKey, "s", "", "secret key")
 	flag.IntVar(&config.UpdateInterval, "i", 10, "update interval in seconds")

@@ -48,9 +48,9 @@ func main() {
 		}
 	}(db)
 
-	if err = db.Ping(); err != nil {
+	/*if err = db.Ping(); err != nil {
 		logger.Log.Fatal("failed to ping database", zap.Error(err))
-	}
+	}*/
 
 	if err = runMigrations(db); err != nil {
 		logger.Log.Fatal("failed to run migrations", zap.Error(err))

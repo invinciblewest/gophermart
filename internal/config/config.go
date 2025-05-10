@@ -2,11 +2,12 @@ package config
 
 import (
 	"flag"
+	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
 	RunAddress           string `env:"RUN_ADDRESS"`
-	DatabaseURL          string `env:"DATABASE_URL"`
+	DatabaseURL          string `env:"DATABASE_URI"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	LogLevel             string `env:"LOG_LEVEL"`
 	SecretKey            string `env:"SECRET_KEY"`
@@ -27,9 +28,9 @@ func GetConfig() (Config, error) {
 
 	flag.Parse()
 
-	/*if err := env.Parse(&config); err != nil {
+	if err := env.Parse(&config); err != nil {
 		return Config{}, err
-	}*/
+	}
 
 	return config, nil
 }

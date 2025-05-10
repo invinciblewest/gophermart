@@ -48,11 +48,10 @@ func main() {
 		}
 	}(db)
 
-	time.Sleep(5 * time.Second)
 	logger.Log.Info("attempting to connect to database...", zap.String("url", cfg.DatabaseURL))
-	/*if err = db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		logger.Log.Fatal("failed to ping database", zap.Error(err))
-	}*/
+	}
 
 	if err = runMigrations(db); err != nil {
 		logger.Log.Fatal("failed to run migrations", zap.Error(err))

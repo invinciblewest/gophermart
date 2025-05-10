@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
@@ -28,9 +27,9 @@ func GetConfig() (Config, error) {
 
 	flag.Parse()
 
-	if err := env.Parse(&config); err != nil {
+	/*if err := env.Parse(&config); err != nil {
 		return Config{}, err
-	}
+	}*/
 
 	return config, nil
 }

@@ -4,10 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/invinciblewest/gophermart/internal/logger"
 	"github.com/invinciblewest/gophermart/internal/model"
-	"go.uber.org/zap"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -39,11 +36,7 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*model.A
 	if err != nil {
 		return nil, 0, err
 	}
-	defer func(Body io.ReadCloser) {
-		if err = Body.Close(); err != nil {
-			logger.Log.Info("failed to close response body", zap.Error(err))
-		}
-	}(response.Body)
+	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusTooManyRequests {
 		retryAfterStr := response.Header.Get("Retry-After")

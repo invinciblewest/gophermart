@@ -5,7 +5,9 @@ import (
 	"net/http"
 )
 
-const UserIDKey = "user_id"
+type ContextKey string
+
+const UserIDKey ContextKey = "user_id"
 
 func GetUserID(r *http.Request) (int, error) {
 	userID, ok := r.Context().Value(UserIDKey).(int)

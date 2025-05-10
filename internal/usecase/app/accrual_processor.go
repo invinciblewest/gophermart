@@ -63,11 +63,12 @@ func (p *AccrualProcessor) processPendingOrders(ctx context.Context, workerCount
 		}()
 	}
 
+outerLoop:
 	for _, order := range orders {
 		select {
 		case jobs <- order:
 		case <-ctx.Done():
-			break
+			break outerLoop
 		}
 	}
 	close(jobs)

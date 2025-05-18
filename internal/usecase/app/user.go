@@ -27,7 +27,7 @@ func (us *UserUseCase) RegisterAndLogin(ctx context.Context, user *model.User) (
 
 	user.Password = us.authUseCase.HashPassword(user.Password)
 
-	if err := us.userRepository.Create(ctx, user); err != nil {
+	if err := us.userRepository.CreateUser(ctx, user); err != nil {
 		return "", err
 	}
 
@@ -39,7 +39,7 @@ func (us *UserUseCase) Login(ctx context.Context, user model.User) (string, erro
 		return "", helper.ErrEmptyLoginOrPassword
 	}
 
-	receivedUser, err := us.userRepository.GetByLogin(ctx, user.Login)
+	receivedUser, err := us.userRepository.GetUserByLogin(ctx, user.Login)
 	if err != nil {
 		return "", err
 	}

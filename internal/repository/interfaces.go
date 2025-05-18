@@ -6,21 +6,23 @@ import (
 )
 
 type UserRepository interface {
-	Create(ctx context.Context, user *model.User) error
-	GetByLogin(ctx context.Context, login string) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.User) error
+	GetUserByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
 type OrderRepository interface {
-	Add(ctx context.Context, order *model.Order) error
-	GetByUser(ctx context.Context, userID int) ([]model.Order, error)
-	GetByNumber(ctx context.Context, number string) (*model.Order, error)
-	UpdateStatus(ctx context.Context, number string, status model.OrderStatus, accrual *model.Amount) error
-	GetSumAccrualByUser(ctx context.Context, userID int) (model.Amount, error)
-	GetPending(ctx context.Context) ([]model.Order, error)
+	AddOrder(ctx context.Context, order *model.Order) error
+	GetOrderByUser(ctx context.Context, userID int) ([]model.Order, error)
+	GetOrderByNumber(ctx context.Context, number string) (*model.Order, error)
+	UpdateOrderStatus(ctx context.Context, number string, status model.OrderStatus, accrual *model.Amount) error
+	GetPendingOrders(ctx context.Context) ([]model.Order, error)
 }
 
 type WithdrawalRepository interface {
-	GetSumWithdrawnByUser(ctx context.Context, userID int) (model.Amount, error)
-	Create(ctx context.Context, withdrawal *model.Withdrawal) error
-	GetByUser(ctx context.Context, userID int) ([]model.Withdrawal, error)
+	CreateWithdrawal(ctx context.Context, withdrawal *model.Withdrawal) error
+	GetWithdrawalByUser(ctx context.Context, userID int) ([]model.Withdrawal, error)
+}
+
+type BalanceRepository interface {
+	GetBalanceByUser(ctx context.Context, userID int) (*model.Balance, error)
 }

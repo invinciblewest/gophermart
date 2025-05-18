@@ -59,16 +59,14 @@ func main() {
 
 	accrualClient := accrual.NewClient(cfg.AccrualSystemAddress)
 
-	userRepository := postgres.NewPGUserRepository(db)
-	orderRepository := postgres.NewPGOrderRepository(db)
-	withdrawalRepository := postgres.NewPGWithdrawalRepository(db)
+	repository := postgres.NewPGRepository(db)
 
 	authUseCase := app.NewAuthUseCase(cfg.SecretKey)
-	userUseCase := app.NewUserUseCase(userRepository, authUseCase)
-	orderUseCase := app.NewOrderUseCase(orderRepository)
-	balanceUseCase := app.NewBalanceUseCase(orderRepository, withdrawalRepository)
+	userUseCase := app.NewUserUseCase(repository, authUseCase)
+	orderUseCase := app.NewOrderUseCase(repository)
+	balanceUseCase := app.NewBalanceUseCase(repository, repository)
 
-	accrualProcessor := app.NewAccrualProcessor(orderRepository, accrualClient)
+	accrualProcessor := app.NewAccrualProcessor(repository, accrualClient)
 
 	go accrualProcessor.Run(ctx, cfg.UpdateInterval, cfg.WorkerCount)
 
@@ -102,11 +100,11 @@ func runHTTPServer(ctx context.Context, address string, handler http.Handler) er
 	go func() {
 		<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		logger.Log.Info("server is shutting down...")
-		if err := server.Shutdown(ctx); err != nil {
+		if err := server.Shutdown(ctxWithTimeout); err != nil {
 			logger.Log.Fatal("server shutdown error", zap.Error(err))
 		}
 	}()

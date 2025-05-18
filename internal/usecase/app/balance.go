@@ -8,33 +8,23 @@ import (
 )
 
 type BalanceUseCase struct {
-	orderRepository      repository.OrderRepository
+	balanceRepository    repository.BalanceRepository
 	withdrawalRepository repository.WithdrawalRepository
 }
 
-func NewBalanceUseCase(orderRepository repository.OrderRepository, withdrawalRepository repository.WithdrawalRepository) *BalanceUseCase {
+func NewBalanceUseCase(balanceRepository repository.BalanceRepository, withdrawalRepository repository.WithdrawalRepository) *BalanceUseCase {
 	return &BalanceUseCase{
-		orderRepository:      orderRepository,
+		balanceRepository:    balanceRepository,
 		withdrawalRepository: withdrawalRepository,
 	}
 }
 
 func (b *BalanceUseCase) GetUserBalance(ctx context.Context, userID int) (*model.Balance, error) {
-	var balance model.Balance
-	totalAccrual, err := b.orderRepository.GetSumAccrualByUser(ctx, userID)
+	balance, err := b.balanceRepository.GetBalanceByUser(ctx, userID)
 	if err != nil {
-		return &balance, err
+		return nil, err
 	}
-
-	totalWithdrawn, err := b.withdrawalRepository.GetSumWithdrawnByUser(ctx, userID)
-	if err != nil {
-		return &balance, err
-	}
-
-	balance.Current = totalAccrual - totalWithdrawn
-	balance.Withdrawn = totalWithdrawn
-
-	return &balance, nil
+	return balance, nil
 }
 
 func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdrawRequest model.WithdrawRequest) error {
@@ -57,7 +47,7 @@ func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdr
 		Amount:      withdrawRequest.Sum,
 	}
 
-	if err = b.withdrawalRepository.Create(ctx, withdrawal); err != nil {
+	if err = b.withdrawalRepository.CreateWithdrawal(ctx, withdrawal); err != nil {
 		return err
 	}
 
@@ -65,7 +55,7 @@ func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdr
 }
 
 func (b *BalanceUseCase) GetWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error) {
-	withdrawals, err := b.withdrawalRepository.GetByUser(ctx, userID)
+	withdrawals, err := b.withdrawalRepository.GetWithdrawalByUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

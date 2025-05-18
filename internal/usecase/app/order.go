@@ -23,7 +23,7 @@ func (os *OrderUseCase) AddOrder(ctx context.Context, order *model.Order) error 
 		return helper.ErrInvalidOrderNumber
 	}
 
-	receivedOrder, err := os.OrderRepository.GetByNumber(ctx, order.Number)
+	receivedOrder, err := os.OrderRepository.GetOrderByNumber(ctx, order.Number)
 	if err != nil && !errors.Is(err, helper.ErrOrderNotFound) {
 		return err
 	}
@@ -38,7 +38,7 @@ func (os *OrderUseCase) AddOrder(ctx context.Context, order *model.Order) error 
 
 	order.Status = model.OrderStatusNew
 
-	if err = os.OrderRepository.Add(ctx, order); err != nil {
+	if err = os.OrderRepository.AddOrder(ctx, order); err != nil {
 		return err
 	}
 
@@ -46,7 +46,7 @@ func (os *OrderUseCase) AddOrder(ctx context.Context, order *model.Order) error 
 }
 
 func (os *OrderUseCase) GetByUser(ctx context.Context, userID int) ([]model.Order, error) {
-	orders, err := os.OrderRepository.GetByUser(ctx, userID)
+	orders, err := os.OrderRepository.GetOrderByUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -29,7 +29,7 @@ func (b *BalanceUseCase) GetUserBalance(ctx context.Context, userID int) (*model
 
 func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdrawRequest model.WithdrawRequest) error {
 	if !helper.IsValidOrderNumber(withdrawRequest.Order) {
-		return helper.ErrInvalidOrderNumber
+		return model.ErrInvalidOrderNumber
 	}
 
 	balance, err := b.GetUserBalance(ctx, userID)
@@ -38,7 +38,7 @@ func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdr
 	}
 
 	if balance.Current < withdrawRequest.Sum {
-		return helper.ErrInvalidWithdrawSum
+		return model.ErrInvalidWithdrawSum
 	}
 
 	withdrawal := &model.Withdrawal{

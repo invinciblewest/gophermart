@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/invinciblewest/gophermart/internal/client/accrual"
-	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/logger"
 	"github.com/invinciblewest/gophermart/internal/model"
 	"github.com/invinciblewest/gophermart/internal/repository"
@@ -43,7 +42,7 @@ func (p *AccrualProcessor) Run(ctx context.Context, interval int, workerCount in
 func (p *AccrualProcessor) processPendingOrders(ctx context.Context, workerCount int) {
 	orders, err := p.orderRepository.GetPendingOrders(ctx)
 	if err != nil {
-		if errors.Is(err, helper.ErrOrderNotFound) {
+		if errors.Is(err, model.ErrOrderNotFound) {
 			logger.Log.Info("no pending orders found")
 			return
 		}

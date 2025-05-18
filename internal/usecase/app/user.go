@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/model"
 	"github.com/invinciblewest/gophermart/internal/repository"
 	"github.com/invinciblewest/gophermart/internal/usecase"
@@ -22,7 +21,7 @@ func NewUserUseCase(userRepository repository.UserRepository, authUseCase usecas
 
 func (us *UserUseCase) RegisterAndLogin(ctx context.Context, user *model.User) (string, error) {
 	if user.Login == "" || user.Password == "" {
-		return "", helper.ErrEmptyLoginOrPassword
+		return "", model.ErrEmptyLoginOrPassword
 	}
 
 	user.Password = us.authUseCase.HashPassword(user.Password)
@@ -36,7 +35,7 @@ func (us *UserUseCase) RegisterAndLogin(ctx context.Context, user *model.User) (
 
 func (us *UserUseCase) Login(ctx context.Context, user model.User) (string, error) {
 	if user.Login == "" || user.Password == "" {
-		return "", helper.ErrEmptyLoginOrPassword
+		return "", model.ErrEmptyLoginOrPassword
 	}
 
 	receivedUser, err := us.userRepository.GetUserByLogin(ctx, user.Login)
@@ -45,7 +44,7 @@ func (us *UserUseCase) Login(ctx context.Context, user model.User) (string, erro
 	}
 
 	if !us.authUseCase.VerifyPassword(receivedUser, user.Password) {
-		return "", helper.ErrInvalidPassword
+		return "", model.ErrInvalidPassword
 	}
 
 	return us.authUseCase.GenerateToken(receivedUser.ID)

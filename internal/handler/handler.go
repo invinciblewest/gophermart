@@ -47,10 +47,10 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	token, err := h.UserUseCase.RegisterAndLogin(r.Context(), &user)
 	if err != nil {
 		switch {
-		case errors.Is(err, helper.ErrEmptyLoginOrPassword):
+		case errors.Is(err, model.ErrEmptyLoginOrPassword):
 			w.WriteHeader(http.StatusBadRequest)
 			return
-		case errors.Is(err, helper.ErrUserAlreadyExists):
+		case errors.Is(err, model.ErrUserAlreadyExists):
 			w.WriteHeader(http.StatusConflict)
 			return
 		default:
@@ -78,14 +78,14 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	token, err := h.UserUseCase.Login(r.Context(), user)
 	if err != nil {
 		switch {
-		case errors.Is(err, helper.ErrEmptyLoginOrPassword):
+		case errors.Is(err, model.ErrEmptyLoginOrPassword):
 			w.WriteHeader(http.StatusBadRequest)
 			return
-		case errors.Is(err, helper.ErrUserNotFound):
+		case errors.Is(err, model.ErrUserNotFound):
 			logger.Log.Info("user not found", zap.String("login", user.Login))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
-		case errors.Is(err, helper.ErrInvalidPassword):
+		case errors.Is(err, model.ErrInvalidPassword):
 			logger.Log.Info("invalid password", zap.String("login", user.Login))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -135,13 +135,13 @@ func (h *Handler) AddOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err = h.OrderUseCase.AddOrder(r.Context(), &order); err != nil {
 		switch {
-		case errors.Is(err, helper.ErrInvalidOrderNumber):
+		case errors.Is(err, model.ErrInvalidOrderNumber):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
-		case errors.Is(err, helper.ErrOrderAlreadyExists):
+		case errors.Is(err, model.ErrOrderAlreadyExists):
 			w.WriteHeader(http.StatusOK)
 			return
-		case errors.Is(err, helper.ErrOrderAlreadyExistsForAnotherUser):
+		case errors.Is(err, model.ErrOrderAlreadyExistsForAnotherUser):
 			w.WriteHeader(http.StatusConflict)
 			return
 		default:
@@ -163,7 +163,7 @@ func (h *Handler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.OrderUseCase.GetByUser(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, helper.ErrOrderNotFound) {
+		if errors.Is(err, model.ErrOrderNotFound) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -221,10 +221,10 @@ func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
 
 	if err = h.BalanceUseCase.WithdrawBalance(r.Context(), userID, withdrawRequest); err != nil {
 		switch {
-		case errors.Is(err, helper.ErrInvalidWithdrawSum):
+		case errors.Is(err, model.ErrInvalidWithdrawSum):
 			w.WriteHeader(http.StatusPaymentRequired)
 			return
-		case errors.Is(err, helper.ErrInvalidOrderNumber):
+		case errors.Is(err, model.ErrInvalidOrderNumber):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		default:
@@ -245,7 +245,7 @@ func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
 
 	withdrawals, err := h.BalanceUseCase.GetWithdrawals(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, helper.ErrWithdrawalNotFound) {
+		if errors.Is(err, model.ErrWithdrawalNotFound) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

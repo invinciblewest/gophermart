@@ -20,19 +20,19 @@ func NewOrderUseCase(orderRepository repository.OrderRepository) *OrderUseCase {
 
 func (os *OrderUseCase) AddOrder(ctx context.Context, order *model.Order) error {
 	if !helper.IsValidOrderNumber(order.Number) {
-		return helper.ErrInvalidOrderNumber
+		return model.ErrInvalidOrderNumber
 	}
 
 	receivedOrder, err := os.OrderRepository.GetOrderByNumber(ctx, order.Number)
-	if err != nil && !errors.Is(err, helper.ErrOrderNotFound) {
+	if err != nil && !errors.Is(err, model.ErrOrderNotFound) {
 		return err
 	}
 
 	if receivedOrder != nil {
 		if order.UserID == receivedOrder.UserID {
-			return helper.ErrOrderAlreadyExists
+			return model.ErrOrderAlreadyExists
 		} else {
-			return helper.ErrOrderAlreadyExistsForAnotherUser
+			return model.ErrOrderAlreadyExistsForAnotherUser
 		}
 	}
 

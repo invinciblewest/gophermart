@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/invinciblewest/gophermart/internal/client/accrual"
+	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/logger"
 	"github.com/invinciblewest/gophermart/internal/model"
 	"github.com/invinciblewest/gophermart/internal/repository"
@@ -42,7 +43,7 @@ func (p *AccrualProcessor) Run(ctx context.Context, interval int, workerCount in
 func (p *AccrualProcessor) processPendingOrders(ctx context.Context, workerCount int) {
 	orders, err := p.orderRepository.GetPending(ctx)
 	if err != nil {
-		if errors.Is(err, repository.ErrOrderNotFound) {
+		if errors.Is(err, helper.ErrOrderNotFound) {
 			logger.Log.Info("no pending orders found")
 			return
 		}
@@ -58,20 +59,26 @@ func (p *AccrualProcessor) processPendingOrders(ctx context.Context, workerCount
 		go func() {
 			defer wg.Done()
 			for order := range jobs {
-				p.processOrder(ctx, order)
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					p.processOrder(ctx, order)
+				}
 			}
 		}()
 	}
 
-outerLoop:
-	for _, order := range orders {
-		select {
-		case jobs <- order:
-		case <-ctx.Done():
-			break outerLoop
+	go func() {
+		defer close(jobs)
+		for _, order := range orders {
+			select {
+			case jobs <- order:
+			case <-ctx.Done():
+				return
+			}
 		}
-	}
-	close(jobs)
+	}()
 
 	wg.Wait()
 }
@@ -89,8 +96,12 @@ func (p *AccrualProcessor) processOrder(ctx context.Context, order model.Order) 
 	if retryAfter > 0 {
 		logger.Log.Info("accrual service is busy, retrying later",
 			zap.String("order_number", order.Number), zap.Int("retry_after", retryAfter))
-		time.Sleep(time.Duration(retryAfter) * time.Second)
-		return
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(time.Duration(retryAfter) * time.Second):
+			return
+		}
 	}
 
 	if response == nil {
@@ -98,7 +109,7 @@ func (p *AccrualProcessor) processOrder(ctx context.Context, order model.Order) 
 		return
 	}
 
-	var newAccrual *float64
+	var newAccrual *model.Amount
 	if response.Status == model.OrderStatusProcessed {
 		newAccrual = &response.Accrual
 	}

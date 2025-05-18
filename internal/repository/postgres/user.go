@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/model"
-	"github.com/invinciblewest/gophermart/internal/repository"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
 )
@@ -22,7 +22,7 @@ func NewPGUserRepository(db *sql.DB) *PGUserRepository {
 
 func (r *PGUserRepository) Create(ctx context.Context, user *model.User) error {
 	if user.Login == "" || user.Password == "" {
-		return repository.ErrEmptyLoginOrPassword
+		return helper.ErrEmptyLoginOrPassword
 	}
 
 	err := r.db.QueryRowContext(
@@ -35,7 +35,7 @@ func (r *PGUserRepository) Create(ctx context.Context, user *model.User) error {
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.UniqueViolation {
-			return repository.ErrUserAlreadyExists
+			return helper.ErrUserAlreadyExists
 		}
 		return err
 	}
@@ -45,7 +45,7 @@ func (r *PGUserRepository) Create(ctx context.Context, user *model.User) error {
 
 func (r *PGUserRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	if login == "" {
-		return nil, repository.ErrEmptyLoginOrPassword
+		return nil, helper.ErrEmptyLoginOrPassword
 	}
 
 	var user model.User
@@ -55,7 +55,7 @@ func (r *PGUserRepository) GetByLogin(ctx context.Context, login string) (*model
 		login).Scan(&user.ID, &user.Login, &user.Password, &user.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, repository.ErrUserNotFound
+			return nil, helper.ErrUserNotFound
 		}
 		return nil, err
 	}

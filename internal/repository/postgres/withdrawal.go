@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/logger"
 	"github.com/invinciblewest/gophermart/internal/model"
-	"github.com/invinciblewest/gophermart/internal/repository"
 	"go.uber.org/zap"
 )
 
@@ -20,8 +20,8 @@ func NewPGWithdrawalRepository(db *sql.DB) *PGWithdrawalRepository {
 	}
 }
 
-func (r *PGWithdrawalRepository) GetSumWithdrawnByUser(ctx context.Context, userID int) (float64, error) {
-	var sum float64
+func (r *PGWithdrawalRepository) GetSumWithdrawnByUser(ctx context.Context, userID int) (model.Amount, error) {
+	var sum model.Amount
 	err := r.db.QueryRowContext(ctx,
 		`SELECT COALESCE(SUM(amount), 0) FROM withdrawals WHERE user_id = $1`,
 		userID).Scan(&sum)
@@ -69,7 +69,7 @@ func (r *PGWithdrawalRepository) GetByUser(ctx context.Context, userID int) ([]m
 	}
 
 	if len(withdrawals) == 0 {
-		return nil, repository.ErrWithdrawalNotFound
+		return nil, helper.ErrWithdrawalNotFound
 	}
 
 	if err = rows.Err(); err != nil {

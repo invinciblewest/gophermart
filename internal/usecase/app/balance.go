@@ -2,11 +2,9 @@ package app
 
 import (
 	"context"
-	"errors"
 	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/model"
 	"github.com/invinciblewest/gophermart/internal/repository"
-	"github.com/invinciblewest/gophermart/internal/usecase"
 )
 
 type BalanceUseCase struct {
@@ -41,7 +39,7 @@ func (b *BalanceUseCase) GetUserBalance(ctx context.Context, userID int) (*model
 
 func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdrawRequest model.WithdrawRequest) error {
 	if !helper.IsValidOrderNumber(withdrawRequest.Order) {
-		return usecase.ErrInvalidOrderNumber
+		return helper.ErrInvalidOrderNumber
 	}
 
 	balance, err := b.GetUserBalance(ctx, userID)
@@ -50,7 +48,7 @@ func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdr
 	}
 
 	if balance.Current < withdrawRequest.Sum {
-		return usecase.ErrInvalidWithdrawSum
+		return helper.ErrInvalidWithdrawSum
 	}
 
 	withdrawal := &model.Withdrawal{
@@ -69,9 +67,6 @@ func (b *BalanceUseCase) WithdrawBalance(ctx context.Context, userID int, withdr
 func (b *BalanceUseCase) GetWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error) {
 	withdrawals, err := b.withdrawalRepository.GetByUser(ctx, userID)
 	if err != nil {
-		if errors.Is(err, repository.ErrWithdrawalNotFound) {
-			return nil, usecase.ErrWithdrawalNotFound
-		}
 		return nil, err
 	}
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/logger"
 	"github.com/invinciblewest/gophermart/internal/model"
-	"github.com/invinciblewest/gophermart/internal/repository"
 	"go.uber.org/zap"
 )
 
@@ -56,7 +56,7 @@ func (r *PGOrderRepository) GetByUser(ctx context.Context, userID int) ([]model.
 	}
 
 	if len(orders) == 0 {
-		return nil, repository.ErrOrderNotFound
+		return nil, helper.ErrOrderNotFound
 	}
 
 	return orders, nil
@@ -69,14 +69,14 @@ func (r *PGOrderRepository) GetByNumber(ctx context.Context, number string) (*mo
 		number).Scan(&order.ID, &order.Number, &order.UserID, &order.Status, &order.Accrual, &order.UploadedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, repository.ErrOrderNotFound
+			return nil, helper.ErrOrderNotFound
 		}
 		return nil, err
 	}
 	return &order, nil
 }
 
-func (r *PGOrderRepository) UpdateStatus(ctx context.Context, number string, status model.OrderStatus, accrual *float64) error {
+func (r *PGOrderRepository) UpdateStatus(ctx context.Context, number string, status model.OrderStatus, accrual *model.Amount) error {
 	_, err := r.db.ExecContext(ctx,
 		"UPDATE orders SET status = $1, accrual = $2 WHERE number = $3",
 		status, accrual, number)
@@ -86,8 +86,8 @@ func (r *PGOrderRepository) UpdateStatus(ctx context.Context, number string, sta
 	return nil
 }
 
-func (r *PGOrderRepository) GetSumAccrualByUser(ctx context.Context, userID int) (float64, error) {
-	var sum float64
+func (r *PGOrderRepository) GetSumAccrualByUser(ctx context.Context, userID int) (model.Amount, error) {
+	var sum model.Amount
 	err := r.db.QueryRowContext(ctx,
 		"SELECT COALESCE(SUM(accrual), 0) FROM orders WHERE user_id = $1 AND status = $2",
 		userID, model.OrderStatusProcessed).Scan(&sum)
@@ -127,7 +127,7 @@ func (r *PGOrderRepository) GetPending(ctx context.Context) ([]model.Order, erro
 	}
 
 	if len(orders) == 0 {
-		return nil, repository.ErrOrderNotFound
+		return nil, helper.ErrOrderNotFound
 	}
 
 	return orders, nil

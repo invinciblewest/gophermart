@@ -2,17 +2,7 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"github.com/invinciblewest/gophermart/internal/model"
-)
-
-var (
-	ErrOrderNotFound                    = errors.New("order not found")
-	ErrInvalidOrderNumber               = errors.New("invalid order number")
-	ErrOrderAlreadyExists               = errors.New("order already exists")
-	ErrOrderAlreadyExistsForAnotherUser = errors.New("order already exists for another user")
-	ErrInvalidWithdrawSum               = errors.New("invalid withdraw sum")
-	ErrWithdrawalNotFound               = errors.New("withdrawal not found")
 )
 
 type AuthUseCase interface {

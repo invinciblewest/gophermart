@@ -5,6 +5,7 @@ import (
 	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/usecase"
 	"net/http"
+	"strings"
 )
 
 func AuthMiddleware(authUseCase usecase.AuthUseCase) func(next http.Handler) http.Handler {
@@ -16,9 +17,12 @@ func AuthMiddleware(authUseCase usecase.AuthUseCase) func(next http.Handler) htt
 				return
 			}
 
-			if len(token) > 7 && token[:7] == "Bearer " {
-				token = token[7:]
+			const prefix = "Bearer "
+			if !strings.HasPrefix(token, prefix) {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 			}
+			token = strings.TrimPrefix(token, prefix)
 
 			userID, err := authUseCase.ParseToken(token)
 			if err != nil {

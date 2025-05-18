@@ -7,11 +7,11 @@ import (
 	"github.com/invinciblewest/gophermart/internal/helper"
 	"github.com/invinciblewest/gophermart/internal/logger"
 	"github.com/invinciblewest/gophermart/internal/model"
-	"github.com/invinciblewest/gophermart/internal/repository"
 	"github.com/invinciblewest/gophermart/internal/usecase"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type Handler struct {
@@ -33,7 +33,7 @@ func NewHandler(
 }
 
 func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -46,13 +46,14 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.UserUseCase.RegisterAndLogin(r.Context(), &user)
 	if err != nil {
-		if errors.Is(err, repository.ErrEmptyLoginOrPassword) {
+		switch {
+		case errors.Is(err, helper.ErrEmptyLoginOrPassword):
 			w.WriteHeader(http.StatusBadRequest)
 			return
-		} else if errors.Is(err, repository.ErrUserAlreadyExists) {
+		case errors.Is(err, helper.ErrUserAlreadyExists):
 			w.WriteHeader(http.StatusConflict)
 			return
-		} else {
+		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			logger.Log.Info("failed to register user", zap.Error(err))
 			return
@@ -64,7 +65,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -76,18 +77,19 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := h.UserUseCase.Login(r.Context(), user)
 	if err != nil {
-		if errors.Is(err, repository.ErrEmptyLoginOrPassword) {
+		switch {
+		case errors.Is(err, helper.ErrEmptyLoginOrPassword):
 			w.WriteHeader(http.StatusBadRequest)
 			return
-		} else if errors.Is(err, repository.ErrUserNotFound) {
+		case errors.Is(err, helper.ErrUserNotFound):
 			logger.Log.Info("user not found", zap.String("login", user.Login))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
-		} else if errors.Is(err, repository.ErrInvalidPassword) {
+		case errors.Is(err, helper.ErrInvalidPassword):
 			logger.Log.Info("invalid password", zap.String("login", user.Login))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
-		} else {
+		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			logger.Log.Info("failed to login user", zap.Error(err))
 			return
@@ -133,13 +135,13 @@ func (h *Handler) AddOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err = h.OrderUseCase.AddOrder(r.Context(), &order); err != nil {
 		switch {
-		case errors.Is(err, usecase.ErrInvalidOrderNumber):
+		case errors.Is(err, helper.ErrInvalidOrderNumber):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
-		case errors.Is(err, usecase.ErrOrderAlreadyExists):
+		case errors.Is(err, helper.ErrOrderAlreadyExists):
 			w.WriteHeader(http.StatusOK)
 			return
-		case errors.Is(err, usecase.ErrOrderAlreadyExistsForAnotherUser):
+		case errors.Is(err, helper.ErrOrderAlreadyExistsForAnotherUser):
 			w.WriteHeader(http.StatusConflict)
 			return
 		default:
@@ -161,7 +163,7 @@ func (h *Handler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.OrderUseCase.GetByUser(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, usecase.ErrOrderNotFound) {
+		if errors.Is(err, helper.ErrOrderNotFound) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -206,7 +208,7 @@ func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Header.Get("Content-Type") != "application/json" {
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -219,10 +221,10 @@ func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
 
 	if err = h.BalanceUseCase.WithdrawBalance(r.Context(), userID, withdrawRequest); err != nil {
 		switch {
-		case errors.Is(err, usecase.ErrInvalidWithdrawSum):
+		case errors.Is(err, helper.ErrInvalidWithdrawSum):
 			w.WriteHeader(http.StatusPaymentRequired)
 			return
-		case errors.Is(err, usecase.ErrInvalidOrderNumber):
+		case errors.Is(err, helper.ErrInvalidOrderNumber):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		default:
@@ -243,7 +245,7 @@ func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
 
 	withdrawals, err := h.BalanceUseCase.GetWithdrawals(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, usecase.ErrWithdrawalNotFound) {
+		if errors.Is(err, helper.ErrWithdrawalNotFound) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

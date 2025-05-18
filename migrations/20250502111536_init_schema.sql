@@ -4,29 +4,25 @@ CREATE TABLE "users" (
     "id" serial PRIMARY KEY,
     "login" varchar(255) UNIQUE NOT NULL,
     "password" varchar(255) NOT NULL,
-    "created_at" timestamp DEFAULT (now())
+    "created_at" timestamptz DEFAULT (now())
 );
 
 CREATE TABLE "orders" (
     "id" serial PRIMARY KEY,
-    "user_id" int NOT NULL,
+    "user_id" int NOT NULL REFERENCES "users" ("id"),
     "number" varchar(50) UNIQUE NOT NULL,
     "status" varchar(20) NOT NULL,
-    "accrual" numeric(10,2),
-    "uploaded_at" timestamp DEFAULT (now())
+    "accrual" int,
+    "uploaded_at" timestamptz DEFAULT (now())
 );
 
 CREATE TABLE "withdrawals" (
     "id" serial PRIMARY KEY,
-    "user_id" int NOT NULL,
+    "user_id" int NOT NULL REFERENCES "users" ("id"),
     "order_number" varchar(50) NOT NULL,
-    "amount" numeric(10,2) NOT NULL,
-    "processed_at" timestamp DEFAULT (now())
+    "amount" int NOT NULL,
+    "processed_at" timestamptz DEFAULT (now())
 );
-
-ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-
-ALTER TABLE "withdrawals" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 -- +goose StatementEnd
 
 -- +goose Down
